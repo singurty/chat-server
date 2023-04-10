@@ -1,5 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
-const port = 3000;
 
-app.listen(port, () => console.log(`Chat server listening on port ${port}!`));
+
+app.listen(process.env.PORT, () => console.log(`Chat server listening on port ${process.env.PORT}!`));
+
+app.use(express.static('../chat/dist'))
