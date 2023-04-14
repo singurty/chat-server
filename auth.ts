@@ -15,13 +15,13 @@ const userSchema = new mongoose.Schema<IUser>({
 
 const User: mongoose.Model<IUser> = mongoose.model('User', userSchema);
 
-async function SignUp(username: string, password: string) {
+async function SignUp(username: string, password: string): Promise<IUser> {
     const user: IUser = new User({
         username: username,
         password: hashSync(password)
     });
-    console.log("password", user.password)
     await user.save();
+    return user;
 }
 
 async function SignIn(username: string, password: string) {
