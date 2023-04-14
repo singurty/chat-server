@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { hashSync } from 'bcryptjs';
+import { hashSync, compareSync} from 'bcryptjs';
 
 interface IUser extends mongoose.Document {
     username: string;
@@ -20,7 +20,23 @@ async function SignUp(username: string, password: string) {
         username: username,
         password: hashSync(password)
     });
-    user.save();
+    console.log("password", user.password)
+    await user.save();
 }
 
-export { SignUp };
+async function SignIn(username: string, password: string) {
+    const user: IUser = await User.findOne({ username: username });
+
+    if (!user) {
+        throw new Error('Invalid username or password');
+    }
+
+    const passwordHash = hashSync(password);
+    if (compareSync(password, user.password)) {
+        return user;
+    } else {
+        throw new Error('Invalid username or password');
+    }
+}
+
+export { SignUp, SignIn };

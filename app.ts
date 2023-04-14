@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose, { ConnectOptions } from 'mongoose';
 import bodyParser = require('body-parser');
 
-import { SignUp } from './auth';
+import { SignUp, SignIn } from './auth';
 
 require('dotenv').config();
 
@@ -31,8 +31,17 @@ app.post('/api/signup', async (req: Request, res: Response) => {
         const { username, password } = req.body;
         await SignUp(username, password);
         res.status(200).send({ message: 'User created' });
-    }
-    catch (err: any) {
+    } catch (err: any) {
         res.status(500).send({ message: `Error creating user: ${err}` });
+    }
+})
+
+app.post('/api/signin', async (req: Request, res: Response) => {
+    try {
+        const { username, password } = req.body;
+        const user = await SignIn(username, password);
+        res.status(200).send({ message: 'User signed in', user: user });
+    } catch (err: any) {
+        res.status(500).send({ message: `Error signing in user: ${err}` });
     }
 })
