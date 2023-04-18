@@ -72,3 +72,21 @@ app.post('/api/signin', async (req: Request, res: Response) => {
         res.status(500).send({ message: `Error signing in user: ${err}` });
     }
 })
+
+app.get('/api/signout', (req: Request, res: Response) => {
+    req.session.destroy(function(err: any) {
+        if (err) {
+            res.status(500).send({ message: 'Error signing out user' });
+        } else {
+            res.status(200).redirect('/');
+        }
+    })
+})
+
+app.get('/api/user', (req: Request, res: Response) => {
+    if (req.session.username) {
+        res.status(200).send({ username: req.session.username });
+    } else {
+        res.status(401).send({ message: 'Unauthorized' });
+    }
+});
