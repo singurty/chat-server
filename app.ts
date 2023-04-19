@@ -3,7 +3,8 @@ import mongoose, { ConnectOptions } from 'mongoose';
 import bodyParser = require('body-parser');
 import session from 'express-session'
 
-import { SignUp, SignIn } from './auth';
+import { SignUp, SignIn, IUser, User } from './auth';
+import { Message, Channel, CreateChannel, GetChannelsForUser } from './chat';
 
 require('dotenv').config();
 
@@ -30,7 +31,7 @@ const dbConnect = async () => {
         console.log("Connected to MongoDB");
     } catch(err: any) {
         console.log("Error connecting to MongoDB", err);
-        process.exit(1);
+        // process.exit(1);
     };
 }
 dbConnect();
@@ -90,3 +91,38 @@ app.get('/api/user', (req: Request, res: Response) => {
         res.status(401).send({ message: 'Unauthorized' });
     }
 });
+
+app.post('/api/createchannel', (req: Request, res: Response) => {
+    if (req.session.username) {
+        const { name } = req.body;
+         User.findOne({ username: req.session.username })
+            .then((user: IUser) => {
+                CreateChannel(name, [user])
+                    .then((channel) => {
+                        res.status(200).send({ channel: channel });
+                    })
+                    .catch((err: any) => {
+                        res.status(500).send({ message: `Error creating channel: ${err}` });
+                    })
+                })
+    } else {
+        res.status(401).send({ message: 'Unauthorized' });
+    }
+})
+
+app.get('/api/channels', (req: Request, res: Response) => {
+    if (req.session.username) {
+        User.findOne({ username: req.session.username })
+            .then((user: IUser) => {
+                GetChannelsForUser(user)
+                    .then((channels) => {
+                        res.status(200).send({ channels: channels });
+                    })
+                    .catch((err: any) => {
+                        res.status(500).send({ message: `Error getting channels: ${err}` });
+                    })
+                })
+    } else {
+        res.status(401).send({ message: 'Unauthorized' });
+    }
+})

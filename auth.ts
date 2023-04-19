@@ -10,7 +10,7 @@ interface IUser extends mongoose.Document {
 const userSchema = new mongoose.Schema<IUser>({
     username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
-    createdAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
 });
 
 const User: mongoose.Model<IUser> = mongoose.model('User', userSchema);
@@ -24,7 +24,7 @@ async function SignUp(username: string, password: string): Promise<IUser> {
     return user;
 }
 
-async function SignIn(username: string, password: string) {
+async function SignIn(username: string, password: string): Promise<IUser> {
     const user: IUser = await User.findOne({ username: username });
 
     if (!user) {
@@ -39,4 +39,4 @@ async function SignIn(username: string, password: string) {
     }
 }
 
-export { SignUp, SignIn };
+export { SignUp, SignIn, IUser, User };
