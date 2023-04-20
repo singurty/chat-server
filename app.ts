@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import mongoose, { ConnectOptions } from 'mongoose';
 import bodyParser = require('body-parser');
-import session from 'express-session'
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 
 import { SignUp, SignIn, IUser, User } from './auth';
-import { Message, Channel, CreateChannel, GetChannelsForUser } from './chat';
+import { IMessage, IChannel, Channel, CreateChannel, GetChannelsForUser, SendMessage } from './chat';
 
 require('dotenv').config();
 
@@ -17,24 +18,20 @@ declare module 'express-session' {
     }
 }
 
+mongoose.connect(process.env.MONGO_URI, <ConnectOptions>{ useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err: any) => {
+        console.log('Error connecting to MongoDB', err)
+    });
+
 app.use(bodyParser.urlencoded());
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     cookie: { maxAge: 86400 * 100 },
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({ client: mongoose.connection.getClient() })
 }))
-
-const dbConnect = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI, <ConnectOptions>{ useNewUrlParser: true, useUnifiedTopology: true });
-        console.log("Connected to MongoDB");
-    } catch(err: any) {
-        console.log("Error connecting to MongoDB", err);
-        // process.exit(1);
-    };
-}
-dbConnect();
 
 app.listen(process.env.PORT, () => console.log(`Chat server listening on port ${process.env.PORT}!`));
 
@@ -122,6 +119,23 @@ app.get('/api/channels', (req: Request, res: Response) => {
                         res.status(500).send({ message: `Error getting channels: ${err}` });
                     })
                 })
+    } else {
+        res.status(401).send({ message: 'Unauthorized' });
+    }
+})
+
+app.post('/api/sendmessage', async (req: Request, res: Response) => {
+    if (req.session.username) {
+        const { channelID, message } = req.body;
+        try {
+            const user = await User.findOne({ username: req.session.username })
+            const channel = await Channel.findById(channelID);
+            console.log(channel);
+            SendMessage(channel, user, message)
+            res.status(200).send({ message: message });
+        } catch (err: any) {
+            res.status(500).send({ message: `Error sending message: ${err}` });
+        }
     } else {
         res.status(401).send({ message: 'Unauthorized' });
     }
