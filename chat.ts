@@ -48,12 +48,7 @@ async function SendMessage(channel: IChannel, user: IUser, message: string): Pro
         user: user,
         message: message
     });
-    // If there were no messages in the channel, create new array of messages
-    if (!channel.messages) {
-        channel.messages = [msg];
-    } else {
-        channel.messages.push(msg);
-    }
+    channel.messages.push(msg);
     await channel.save();
     return msg;
 }

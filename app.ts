@@ -130,7 +130,6 @@ app.post('/api/sendmessage', async (req: Request, res: Response) => {
         try {
             const user = await User.findOne({ username: req.session.username })
             const channel = await Channel.findById(channelID);
-            console.log(channel);
             SendMessage(channel, user, message)
             res.status(200).send({ message: message });
         } catch (err: any) {
