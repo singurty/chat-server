@@ -5,7 +5,7 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 
 import { SignUp, SignIn, IUser, User } from './auth';
-import { IMessage, IChannel, Channel, CreateChannel, GetChannelsForUser, SendMessage } from './chat';
+import { IMessage, IChannel, Channel, Message, CreateChannel, GetChannelsForUser, SendMessage, GetMessagesForChannel } from './chat';
 
 require('dotenv').config();
 
@@ -134,6 +134,28 @@ app.post('/api/sendmessage', async (req: Request, res: Response) => {
             res.status(200).send({ message: message });
         } catch (err: any) {
             res.status(500).send({ message: `Error sending message: ${err}` });
+        }
+    } else {
+        res.status(401).send({ message: 'Unauthorized' });
+    }
+})
+
+app.get('/api/messages', async (req: Request, res: Response) => {
+    if (req.session.username) {
+        const { channelID, oldestMessage } = req.query;
+        console.log(req.query)
+        try {
+            const channel = await Channel.findById(channelID);
+            var oldest: IMessage | null;
+            if (oldestMessage) {
+                oldest = await Message.findById(oldestMessage);
+            } else {
+                oldest = null;
+            }
+            const messages = await GetMessagesForChannel(channel, oldest);
+            res.status(200).send({ messages });
+        } catch (err: any) {
+            res.status(500).send({ message: `Error getting messages: ${err}` });
         }
     } else {
         res.status(401).send({ message: 'Unauthorized' });

@@ -49,8 +49,20 @@ async function SendMessage(channel: IChannel, user: IUser, message: string): Pro
         message: message
     });
     channel.messages.push(msg);
+    await msg.save();
     await channel.save();
     return msg;
 }
 
-export { IMessage, IChannel, Message, Channel, CreateChannel, GetChannelsForUser, SendMessage };
+// Returns 100 messages beore the oldest message from a channel
+async function GetMessagesForChannel(channel: IChannel, oldest: IMessage): Promise<IMessage[]> {
+    if (oldest) {
+        const messages: IMessage[] = await Message.find({ _id: { $in: channel.messages }, createdAt: { $lt: oldest.createdAt } }).sort({ createdAt: -1 }).limit(100);
+        return messages;
+    } else {
+        const messages: IMessage[] = await Message.find({ _id: { $in: channel.messages } }).sort({ createdAt: -1 }).limit(100);
+        return messages;
+    }
+}
+
+export { IMessage, IChannel, Message, Channel, CreateChannel, GetChannelsForUser, SendMessage, GetMessagesForChannel };
